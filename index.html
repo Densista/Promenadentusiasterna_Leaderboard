@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Promenadentusiasterna</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d; --surface: #161616; --surface2: #1c1c1c; --border: #2a2a2a;
+    --text: #f0f0f0; --muted: #555; --muted2: #888;
+    --gold: #f5c842; --gold-bg: #2a2100; --gold-border: #3d3000;
+    --silver: #c0c0c0; --silver-bg: #1a1a1a; --silver-border: #303030;
+    --bronze: #cd7f32; --bronze-bg: #1e1000; --bronze-border: #2a1a00;
+    --fourth: #444; --fourth-bg: #111; --fourth-border: #222;
+    --green: #4caf7d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; padding-bottom: 60px; max-width: 480px; margin: 0 auto; }
+
+  header { padding: 26px 18px 14px; border-bottom: 1px solid var(--border); }
+  header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.06em; color: var(--gold); line-height: 1; }
+  header p { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 3px; }
+
+  .section-label { font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); padding: 20px 18px 8px; }
+
+  /* ── SYNC BAR ── */
+  .sync-bar { display: flex; align-items: center; justify-content: space-between; margin: 0 10px 4px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; gap: 12px; }
+  .sync-info { flex: 1; }
+  .sync-label { font-size: 0.55rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .sync-time { font-size: 0.65rem; color: var(--muted2); margin-top: 2px; }
+  .sync-time.success { color: var(--green); }
+  .sync-time.error { color: #e05555; }
+  .btn-sync { display: flex; align-items: center; gap: 7px; padding: 9px 16px; background: transparent; border: 1px solid var(--gold); border-radius: 6px; color: var(--gold); font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; }
+  .btn-sync:active { background: rgba(245,200,66,0.1); }
+  .btn-sync.loading { opacity: 0.6; pointer-events: none; }
+  .sync-icon { font-size: 0.9rem; }
+  .btn-sync.loading .sync-icon { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── BOARD ── */
+  .board-header { display: grid; grid-template-columns: 22px 1fr 46px 30px 30px 30px 48px; gap: 3px; padding: 0 14px 6px 24px; font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .player-row { display: grid; grid-template-columns: 22px 1fr 46px 30px 30px 30px 48px; gap: 3px; align-items: center; padding: 11px 14px; margin: 0 10px 7px; border-radius: 8px; border: 1px solid transparent; position: relative; overflow: hidden; animation: rowIn 0.3s ease both; }
+  @keyframes rowIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+  .player-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+  .rank-1 { background:var(--gold-bg); border-color:var(--gold-border); } .rank-1::before { background:var(--gold); }
+  .rank-2 { background:var(--silver-bg); border-color:var(--silver-border); } .rank-2::before { background:var(--silver); }
+  .rank-3 { background:var(--bronze-bg); border-color:var(--bronze-border); } .rank-3::before { background:var(--bronze); }
+  .rank-4 { background:var(--fourth-bg); border-color:var(--fourth-border); } .rank-4::before { background:var(--fourth); }
+  .rank-badge { font-family:'Bebas Neue',sans-serif; font-size:1rem; text-align:center; }
+  .rank-1 .rank-badge{color:var(--gold)} .rank-2 .rank-badge{color:var(--silver)} .rank-3 .rank-badge{color:var(--bronze)} .rank-4 .rank-badge{color:var(--muted)}
+  .player-name { font-size:0.82rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .player-steps { font-size:0.55rem; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .player-points { font-family:'Bebas Neue',sans-serif; font-size:1.25rem; text-align:right; }
+  .rank-1 .player-points{color:var(--gold)} .rank-2 .player-points{color:var(--silver)} .rank-3 .player-points{color:var(--bronze)} .rank-4 .player-points{color:var(--muted)}
+  .stat { font-size:0.68rem; text-align:center; color:var(--muted2); }
+  .medal-label { font-size:0.58rem; text-align:center; letter-spacing:0.04em; }
+  .rank-1 .medal-label{color:var(--gold)} .rank-2 .medal-label{color:var(--silver)} .rank-3 .medal-label{color:var(--bronze)} .rank-4 .medal-label{color:var(--muted)}
+
+  /* ── TABS ── */
+  .tabs { display:flex; margin:0 10px; border-bottom:1px solid var(--border); }
+  .tab { flex:1; padding:10px 0; background:none; border:none; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:color 0.2s,border-color 0.2s; }
+  .tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* ── HISTORY ── */
+  .history-event { margin:0 10px 10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .history-header { display:flex; justify-content:space-between; align-items:center; padding:9px 13px; background:var(--surface2); border-bottom:1px solid var(--border); }
+  .history-date { font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:0.08em; color:var(--gold); }
+  .history-row { display:grid; grid-template-columns:1fr 60px 70px; padding:7px 13px; border-bottom:1px solid var(--border); font-size:0.68rem; align-items:center; }
+  .history-row:last-child { border-bottom:none; }
+  .history-col-h { font-size:0.5rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+  .history-place { text-align:center; font-weight:500; }
+  .history-steps { text-align:right; color:var(--muted2); font-size:0.62rem; }
+  .place-g{color:var(--gold)} .place-s{color:var(--silver)} .place-b{color:var(--bronze)} .place-p{color:var(--muted)} .place-n{color:var(--muted);font-style:italic}
+
+  .key-row { display:flex; gap:5px; flex-wrap:wrap; padding:10px 10px 0; }
+  .key-chip { font-size:0.58rem; letter-spacing:0.06em; padding:3px 9px; border-radius:20px; border:1px solid var(--border); color:var(--muted); }
+  .key-chip span { color:var(--text); }
+
+  .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--gold); color:#000; font-family:'Bebas Neue',sans-serif; font-size:0.88rem; letter-spacing:0.1em; padding:9px 20px; border-radius:30px; transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index:100; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--gold); display:inline-block; animation:pulse 1.8s infinite; margin-right:5px; vertical-align:middle; }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .empty { color:var(--muted); font-style:italic; font-size:0.72rem; padding:22px; text-align:center; }
+
+  .placeholder-msg { margin:10px; padding:20px; background:var(--surface); border:1px solid var(--border); border-radius:8px; text-align:center; color:var(--muted2); font-size:0.72rem; line-height:1.8; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Promenadentusiasterna</h1>
+  <p><span class="dot"></span>Live rankningslista</p>
+</header>
+
+<!-- SYNC -->
+<div class="section-label">Excel-synk</div>
+<div class="sync-bar">
+  <div class="sync-info">
+    <div class="sync-label">Hämta från Excel</div>
+    <div class="sync-time" id="sync-status">Ej synkad än</div>
+  </div>
+  <button class="btn-sync" id="sync-btn" onclick="syncFromJSONBin()">
+    <span class="sync-icon">⟳</span> Synka
+  </button>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="section-label">Rankningslista</div>
+<div class="board-header">
+  <div></div><div>Deltagare</div>
+  <div style="text-align:right">Poäng</div>
+  <div style="text-align:center">Segrar</div>
+  <div style="text-align:center">2:a</div>
+  <div style="text-align:center">3:e</div>
+  <div style="text-align:center">Medalj</div>
+</div>
+<div id="board"></div>
+
+<div class="key-row">
+  <div class="key-chip">1 → <span>5p</span></div>
+  <div class="key-chip">2 → <span>2p</span></div>
+  <div class="key-chip">3 → <span>1p</span></div>
+  <div class="key-chip">4 → <span>0p</span></div>
+  <div class="key-chip">n → <span>N/A</span></div>
+</div>
+
+<!-- TABS -->
+<div class="section-label" style="padding-bottom:0">Historik</div>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('history',this)">Senaste 3 event</button>
+</div>
+
+<div id="tab-history">
+  <div style="height:10px"></div>
+  <div id="history-list"><div class="placeholder-msg">Tryck Synka för att hämta data från Excel.</div></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const BIN_ID  = '69d24dea856a682189ffa2ee';
+  const API_KEY = '$2a$10$jts2hu8G/jdPdCyaxKBDau00bacUjLatzC99xmMma/DreXNqY7zMO';
+  const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+
+  const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
+  const MEDALS       = ['Guld','Silver','Brons','Papper'];
+  const PLACE_CLASS  = {'1':'place-g','2':'place-s','3':'place-b','4':'place-p','n':'place-n','N / A':'place-n'};
+  const PLACE_LABEL  = {'1':'1:a 🥇','2':'2:a 🥈','3':'3:e 🥉','4':'4:e','n':'N/A','N / A':'N/A'};
+
+  function loadCache() { try { return JSON.parse(localStorage.getItem('prom_cache')) || null; } catch { return null; } }
+  function saveCache(d) { localStorage.setItem('prom_cache', JSON.stringify(d)); }
+
+  let cached = loadCache();
+
+  /* ── SYNC ── */
+  async function syncFromJSONBin() {
+    const btn    = document.getElementById('sync-btn');
+    const status = document.getElementById('sync-status');
+    btn.classList.add('loading');
+    status.className = 'sync-time';
+    status.textContent = 'Hämtar...';
+
+    try {
+      const res = await fetch(BIN_URL, { headers: { 'X-Access-Key': API_KEY } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const data = json.record;
+      if (!data.players || !Array.isArray(data.players)) throw new Error('Ogiltigt format');
+
+      const syncTime = new Date().toLocaleString('sv-SE');
+      data.syncTime = syncTime;
+      saveCache(data);
+      cached = data;
+
+      status.className = 'sync-time success';
+      status.textContent = '✓ Synkad ' + syncTime;
+      renderBoard(data);
+      renderHistory(data);
+      showToast('Synkad från Excel! ✓');
+
+    } catch (err) {
+      status.className = 'sync-time error';
+      status.textContent = '✗ Misslyckades — ' + err.message;
+      showToast('Synk misslyckades');
+    }
+    btn.classList.remove('loading');
+  }
+
+  /* ── BOARD ── */
+  function renderBoard(data) {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    if (!data || !data.players) return;
+
+    data.players.forEach((p, rank) => {
+      const row = document.createElement('div');
+      row.className = `player-row ${RANK_CLASSES[rank]}`;
+      row.style.animationDelay = `${rank*0.05}s`;
+      row.innerHTML = `
+        <div class="rank-badge">${rank+1}</div>
+        <div>
+        <div class="player-name">${p.name || '—'}</div>
+        <div class="player-steps">${p.totalSteps ? Number(p.totalSteps).toLocaleString('sv-SE') + ' steg' : ''}</div>
+        </div>
+        <div class="player-points">${p.points}</div>
+        <div class="stat">${p.victories}</div>
+        <div class="stat">${p.second}</div>
+        <div class="stat">${p.third}</div>
+        <div class="medal-label">${MEDALS[rank]}</div>
+      `;
+      board.appendChild(row);
+    });
+  }
+
+  /* ── HISTORY ── */
+  function renderHistory(data) {
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+
+    if (!data || !data.events || data.events.length === 0) {
+      list.innerHTML = '<div class="empty">Inga event i datan ännu.</div>';
+      return;
+    }
+
+    // Show newest first
+    [...data.events].reverse().forEach(ev => {
+      const card = document.createElement('div');
+      card.className = 'history-event';
+      card.innerHTML = `
+        <div class="history-header">
+          <span class="history-date">${ev.date}</span>
+          <span style="font-size:0.58rem;color:var(--muted);letter-spacing:0.1em">${ev.results.length} deltagare</span>
+        </div>
+        <div class="history-row">
+          <span class="history-col-h">Namn</span>
+          <span class="history-col-h" style="text-align:center">Placering</span>
+          <span class="history-col-h" style="text-align:right">Steg</span>
+        </div>
+      `;
+
+      ev.results.forEach(r => {
+        const placeRaw = String(r.place).trim(); const placeKey = placeRaw in PLACE_CLASS ? placeRaw : 'n';
+        const row = document.createElement('div');
+        row.className = 'history-row';
+        row.innerHTML = `
+          <span>${r.player}</span>
+          <span class="history-place ${PLACE_CLASS[placeKey]}">${PLACE_LABEL[placeKey]}</span>
+          <span class="history-steps">${r.steps ? Number(r.steps).toLocaleString('sv-SE') : '—'}</span>
+        `;
+        card.appendChild(row);
+      });
+
+      list.appendChild(card);
+    });
+  }
+
+  /* ── TABS ── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Load from cache on startup
+  if (cached) {
+    const status = document.getElementById('sync-status');
+    status.className = 'sync-time success';
+    status.textContent = '✓ Senast synkad ' + (cached.syncTime || '');
+    renderBoard(cached);
+    renderHistory(cached);
+  }
+</script>
+</body>
+</html>
